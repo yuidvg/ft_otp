@@ -212,16 +212,6 @@ Table of Contents
    database.  Particularly, access to the key material should be limited
    to programs and processes required by the validation system only.
 
-
-
-
-
-
-
-
-
-
-
 5.2.  Validation and Time-Step Size
 
    An OTP generated within the same time step will be the same.  When an
@@ -271,11 +261,6 @@ Table of Contents
    next OTP within 10 minutes and therefore will have to re-login to the
    same site in 10 minutes.
 
-
-
-
-
-
    Note that a prover may send the same OTP inside a given time-step
    window multiple times to a verifier.  The verifier MUST NOT accept
    the second attempt of the OTP after the successful validation has
@@ -321,14 +306,6 @@ Table of Contents
    specification: Hannes Tschofenig, Jonathan Tuliani, David Dix,
    Siddharth Bajaj, Stu Veath, Shuh Chang, Oanh Hoang, John Huang, and
    Siddhartha Mohapatra.
-
-
-
-
-
-
-
-
 
 8.  References
 
@@ -681,41 +658,3 @@ Appendix B.  Test Vectors
   +-------------+--------------+------------------+----------+--------+
 
                             Table 1: TOTP Table
-
-
-Authors' Addresses
-
-   David M'Raihi
-   Verisign, Inc.
-   685 E. Middlefield Road
-   Mountain View, CA  94043
-   USA
-
-   EMail: davidietf@gmail.com
-
-
-   Salah Machani
-   Diversinet Corp.
-   2225 Sheppard Avenue East, Suite 1801
-   Toronto, Ontario  M2J 5C2
-   Canada
-
-   EMail: smachani@diversinet.com
-
-
-   Mingliang Pei
-   Symantec
-   510 E. Middlefield Road
-   Mountain View, CA  94043
-   USA
-
-   EMail: Mingliang_Pei@symantec.com
-
-
-   Johan Rydell
-   Portwise, Inc.
-   275 Hawthorne Ave., Suite 119
-   Palo Alto, CA  94301
-   USA
-
-   EMail: johanietf@gmail.com

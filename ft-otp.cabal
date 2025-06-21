@@ -1,0 +1,26 @@
+cabal-version: 3.0
+name: ft-otp
+version: 0.1.0.0
+synopsis: Time-based One-Time Password (TOTP) implementation
+description: A TOTP system capable of generating ephemeral passwords from a master key, based on RFC 6238.
+license: MIT
+author: yui
+maintainer: nisshi.yui79@gmail.com
+category: Security
+build-type: Simple
+
+executable ft_otp
+    main-is: Main.hs
+    hs-source-dirs: src
+    build-depends:
+        base ^>=4.18,
+        bytestring,
+        cryptohash-sha1,
+        time,
+        directory,
+        filepath,
+        binary,
+        base16-bytestring,
+        text
+    default-language: Haskell2010
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
