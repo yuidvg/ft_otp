@@ -3,6 +3,7 @@
 module Main (main) where
 
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as C8
 import qualified Crypto.Hash.SHA1 as SHA1
@@ -28,10 +29,10 @@ timeStep = 30
 -- HOTP implementation following RFC 4226
 hotp :: BS.ByteString -> Word32 -> String
 hotp secret counter =
-  let counterBytes = runPut $ putWord32be counter
+  let counterBytes = LBS.toStrict $ runPut $ putWord32be counter
       hmac = SHA1.hmac secret counterBytes
       offset = fromIntegral (BS.last hmac .&. 0x0f)
-      truncated = runGet getWord32be $ BS.drop offset hmac
+      truncated = runGet getWord32be $ LBS.fromStrict $ BS.drop offset hmac
       code = (truncated .&. 0x7fffffff) `mod` 1000000
   in printf "%06d" code
 
@@ -48,8 +49,8 @@ validateHexKey hexStr =
   if length hexStr < 64
     then Left "key must be 64 hexadecimal characters."
     else case B16.decode (C8.pack hexStr) of
-           (decoded, "") -> Right decoded
-           _ -> Left "key must be valid hexadecimal."
+           Right decoded -> Right decoded
+           Left _ -> Left "key must be valid hexadecimal."
 
 -- Simple encryption/decryption (XOR with fixed key for demonstration)
 -- In production, use proper encryption
