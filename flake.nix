@@ -6,30 +6,25 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        haskellPackages = pkgs.haskellPackages;
+        ft-otp = haskellPackages.callCabal2nix "ft-otp" ./. { };
+      in
+      {
+        packages.ft-otp = ft-otp;
 
-        haskellPackages = pkgs.haskell.packages.ghc96;
-
-        ft-otp = haskellPackages.callCabal2nix "ft-otp" ./. {};
-
-      in {
-        packages = {
-          default = ft-otp;
-          ft_otp = ft-otp;
-        };
-
-        apps = {
-          default = {
-            type = "app";
-            program = "${ft-otp}/bin/ft_otp";
-          };
-          ft_otp = {
-            type = "app";
-            program = "${ft-otp}/bin/ft_otp";
-          };
+        apps.ft-otp = {
+          type = "app";
+          program = "${ft-otp}/bin/ft-otp";
         };
 
         devShells.default = haskellPackages.shellFor {
@@ -40,5 +35,6 @@
             haskell-language-server
           ];
         };
-      });
+      }
+    );
 }
