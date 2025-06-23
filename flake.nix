@@ -3,38 +3,61 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    haskell-flake.url = "github:srid/haskell-flake";
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        haskellPackages = pkgs.haskellPackages;
-        ft-otp = haskellPackages.callCabal2nix "ft-otp" ./. { };
-      in
-      {
-        packages.ft-otp = ft-otp;
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "x86_64-linux"
+        "aarch64-darwin"
+      ];
+      imports = [
+        inputs.haskell-flake.flakeModule
+      ];
+      perSystem =
+        {
+          self',
+          system,
+          lib,
+          config,
+          pkgs,
+          ...
+        }:
+        {
 
-        apps.ft-otp = {
-          type = "app";
-          program = "${ft-otp}/bin/ft-otp";
-        };
+          haskellProjects.default = {
+            # basePackages = pkgs.haskellPackages;
 
-        devShells.default = haskellPackages.shellFor {
-          packages = p: [ ft-otp ];
-          buildInputs = with haskellPackages; [
-            cabal-install
-            hlint
-            haskell-language-server
-          ];
+            # Packages to add on top of `basePackages`, e.g. from Hackage
+            #packages = {
+            #  aeson.source = "1.5.0.0"; # Hackage version
+            #};
+
+            # my-haskell-package development shell configuration
+            #devShell = {
+            #  hlsCheck.enable = false;
+            #};
+
+            # What should haskell-flake add to flake outputs?
+            autoWire = [
+              "packages"
+              "apps"
+              "checks"
+            ]; # Wire all but the devShell
+          };
+
+          devShells.default = pkgs.mkShell {
+            name = "my-haskell-package custom development shell";
+            inputsFrom = [
+              config.haskellProjects.default.outputs.devShell
+            ];
+            nativeBuildInputs = with pkgs; [
+              # other development tools.
+            ];
+          };
         };
-      }
-    );
+    };
 }

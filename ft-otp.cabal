@@ -13,7 +13,7 @@ executable ft_otp
     main-is: Main.hs
     hs-source-dirs: src
     build-depends:
-        base ^>=4.18,
+        base,
         bytestring,
         cryptohash-sha1,
         time,
@@ -22,5 +22,5 @@ executable ft_otp
         binary,
         base16-bytestring,
         text
-    default-language: Haskell2010
+    default-language: GHC2021
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
