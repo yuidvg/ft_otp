@@ -10,17 +10,27 @@ category: Security
 build-type: Simple
 
 executable ft_otp
-    main-is: Main.hs
-    hs-source-dirs: src
-    build-depends:
-        base,
-        bytestring,
-        cryptohash-sha1,
-        time,
-        directory,
-        filepath,
-        binary,
-        base16-bytestring,
-        text
-    default-language: GHC2021
-    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  main-is: Main.hs
+  hs-source-dirs: src
+  build-depends:
+    base,
+    base16-bytestring,
+    binary,
+    bytestring,
+    cryptohash-sha1,
+    directory,
+    filepath,
+    text,
+    time,
+
+  default-language: GHC2021
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Widentities
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wmissing-export-lists
+    -Wmissing-home-modules
+    -Wpartial-fields
+    -Wredundant-constraints

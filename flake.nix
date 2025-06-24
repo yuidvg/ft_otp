@@ -57,6 +57,7 @@
             ];
             nativeBuildInputs = with pkgs; [
               # other development tools.
+              haskellPackages.cabal-gild
             ];
           };
         };
