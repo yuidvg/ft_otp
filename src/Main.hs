@@ -7,17 +7,16 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as C8
 import qualified Crypto.Hash.SHA1 as SHA1
-import Data.Binary (encode, decode)
-import Data.Binary.Get (runGet, getWord32be, getWord8)
-import Data.Binary.Put (runPut, putWord32be)
-import Data.Bits ((.&.), shiftR)
-import Data.Time.Clock.POSIX (getPOSIXTime)
-import Data.Word (Word32, Word8)
-import System.Directory (doesFileExist)
-import System.Environment (getArgs)
-import System.Exit (exitFailure)
-import System.IO (hPutStrLn, stderr)
-import Text.Printf (printf)
+import Data.Binary.Get
+import Data.Binary.Put
+import Data.Bits
+import Data.Time.Clock.POSIX
+import Data.Word
+import System.Directory
+import System.Environment
+import System.Exit
+import System.IO
+import Text.Printf
 
 -- Constants
 keyFileName :: String
@@ -40,7 +39,7 @@ hotp secret counter =
 totp :: BS.ByteString -> IO String
 totp secret = do
   currentTime <- getPOSIXTime
-  let timeCounter = floor currentTime `div` fromIntegral timeStep
+  let timeCounter = floor currentTime `div` fromIntegral timeStep :: Integer
   pure $ hotp secret (fromIntegral timeCounter)
 
 -- Validate hexadecimal key
@@ -55,8 +54,7 @@ validateHexKey hexStr =
 -- Simple encryption/decryption (XOR with fixed key for demonstration)
 -- In production, use proper encryption
 encryptKey :: BS.ByteString -> BS.ByteString
-encryptKey = BS.map (`xor` 0xAA)
-  where xor a b = fromIntegral $ fromIntegral a `xor` fromIntegral b
+encryptKey = BS.map (Data.Bits.xor 0xAA)
 
 decryptKey :: BS.ByteString -> BS.ByteString
 decryptKey = encryptKey -- XOR is its own inverse
