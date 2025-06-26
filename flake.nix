@@ -14,6 +14,7 @@
         "x86_64-linux"
         "aarch64-darwin"
         "aarch64-linux"
+        "x86_64-darwin"
       ];
       imports = [
         inputs.haskell-flake.flakeModule
@@ -50,8 +51,11 @@
             ]; # Wire all but the devShell
           };
 
+          # Set the default package to be the ft_otp executable
+          packages.default = self'.packages.ft-otp;
+
           devShells.default = pkgs.mkShell {
-            name = "my-haskell-package custom development shell";
+            name = "ft-otp development shell";
             inputsFrom = [
               config.haskellProjects.default.outputs.devShell
             ];
