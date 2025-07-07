@@ -17,7 +17,6 @@ import System.Directory
 import System.Environment
 import System.Exit
 import System.IO
-import Text.Printf
 
 -- Constants
 keyFileName :: String
@@ -57,14 +56,13 @@ hmacSha1 = SHA1.hmac
 -- Validate hexadecimal key
 validateHexKey :: String -> Either String ByteString
 validateHexKey hexStr =
-  if length hexStr < 64
-    then Left "key must be 64 hexadecimal characters."
-    else case B16.decode (C8.pack hexStr) of
+  if length hexStr >= 64
+    then case B16.decode (C8.pack hexStr) of
       Right decoded -> Right decoded
       Left _ -> Left "key must be valid hexadecimal."
+    else Left "key must be 64 hexadecimal characters."
 
 -- Simple encryption/decryption (XOR with fixed key for demonstration)
--- In production, use proper encryption
 encryptKey :: ByteString -> ByteString
 encryptKey = BS.map (Data.Bits.xor 0xAA)
 
@@ -109,10 +107,10 @@ generateKey filename = do
       content <- BS.readFile filename
       let hexStr = C8.unpack $ BS.filter (/= 10) content
       case validateHexKey hexStr of
+        Right key -> saveKey key
         Left err -> do
           hPutStrLn stderr $ "./ft_otp: error: " ++ err
           exitFailure
-        Right key -> saveKey key
     else do
       hPutStrLn stderr $ "./ft_otp: error: file " ++ filename ++ " does not exist."
       exitFailure
