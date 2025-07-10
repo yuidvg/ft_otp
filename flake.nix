@@ -91,6 +91,9 @@
             nativeBuildInputs = with pkgs; [
               # other development tools.
               haskellPackages.cabal-gild
+              haskellPackages.ghci-dap
+              haskellPackages.haskell-debug-adapter
+              haskellPackages.haskell-dap
               oathToolkit
             ];
           };
