@@ -11,10 +11,10 @@
 			"internalConsoleOptions": "openOnSessionStart",
 			"workspace": "${workspaceFolder}",
 			"startup": "${workspaceFolder}/src/Main.hs",
-			"startupFunc": "main",
+			"startupFunc": "",
 			"startupArgs": "",
 			"stopOnEntry": true,
-			"mainArgs": "",
+			"mainArgs": "-k test/ft_otp.key",
 			"ghciPrompt": "H>>= ",
 			"ghciInitialPrompt": "ghci> ",
 			// The special key "ghci-dap" instructs HDA to use hie-bios to determine the appropriate flags to pass
