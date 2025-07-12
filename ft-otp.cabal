@@ -34,3 +34,12 @@ executable ft_otp
     -Wmissing-home-modules
     -Wpartial-fields
     -Wredundant-constraints
+
+-- test suite using hspec
+test-suite ft_otp_test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs: test
+  build-depends:
+    base,
+    hspec,
