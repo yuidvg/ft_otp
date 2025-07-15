@@ -30,20 +30,22 @@
         }:
         let
           # Helper function to create test derivations
-          mkTestScript = name: script: deps: pkgs.stdenv.mkDerivation {
-            inherit name;
-            src = ./.;
-            nativeBuildInputs = deps ++ [ pkgs.bash ];
-            buildPhase = ''
-              # Make script executable and run test
-              chmod +x ${script}
-              ./${script} $PWD/test/key.hex
-            '';
-            installPhase = ''
-              mkdir -p $out
-              echo "${name} completed successfully" > $out/result
-            '';
-          };
+          mkTestScript =
+            name: script: deps:
+            pkgs.stdenv.mkDerivation {
+              inherit name;
+              src = ./.;
+              nativeBuildInputs = deps ++ [ pkgs.bash ];
+              buildPhase = ''
+                # Make script executable and run test
+                chmod +x ${script}
+                ./${script} $PWD/test/key.hex
+              '';
+              installPhase = ''
+                mkdir -p $out
+                echo "${name} completed successfully" > $out/result
+              '';
+            };
         in
         {
 
@@ -72,16 +74,15 @@
           packages.default = self'.packages.ft-otp;
 
           # E2E test that compares ft_otp output with oathtool
-          checks.e2e-test = mkTestScript
-            "ft-otp-e2e-test"
-            "test/e2e-test.sh"
-            [ self'.packages.ft-otp pkgs.oathToolkit ];
+          checks.e2e-test = mkTestScript "ft-otp-e2e-test" "test/e2e-test.sh" [
+            self'.packages.ft-otp
+            pkgs.oathToolkit
+          ];
 
           # HOTP deterministic test
-          checks.hotp-deterministic-test = mkTestScript
-            "ft-otp-hotp-test"
-            "test/hotp-test.sh"
-            [ pkgs.oathToolkit ];
+          checks.hotp-deterministic-test = mkTestScript "ft-otp-hotp-test" "test/hotp-test.sh" [
+            pkgs.oathToolkit
+          ];
 
           devShells.default = pkgs.mkShell {
             name = "ft-otp development shell";
