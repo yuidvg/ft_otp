@@ -4,7 +4,7 @@ module Main (main) where
 
 import Crypto.Hash.SHA1 qualified as SHA1
 import Data.Binary.Get (getWord32be, runGet)
-import Data.Binary.Put (putWord32be, runPut)
+import Data.Binary.Put (putWord32be, putWord64be, runPut)
 import Data.Bits
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
@@ -17,6 +17,7 @@ import System.Directory
 import System.Environment
 import System.Exit
 import System.IO
+import Text.Printf (printf)
 
 -- Constants
 keyFileName :: String
@@ -35,8 +36,10 @@ totp key =
      in pure $ hotp key (fromIntegral timeCounter)
 
 -- HOTP implementation following RFC 4226
-hotp :: ByteString -> Word32 -> Word32
-hotp secret counter = dynamicTruncate $ hmacSha1 secret (LBS.toStrict $ runPut $ putWord32be counter)
+hotp :: ByteString -> Word64 -> Word32
+-- HOTP as defined in RFC 4226 uses an 8-byte (64-bit) counter encoded big-endian.
+-- We therefore serialise the counter using `putWord64be` instead of `putWord32be`.
+hotp secret counter = dynamicTruncate $ hmacSha1 secret (LBS.toStrict $ runPut $ putWord64be counter)
 
 dynamicTruncate :: ByteString -> Word32
 dynamicTruncate hs =
@@ -57,9 +60,10 @@ hmacSha1 = SHA1.hmac
 validateHexKey :: String -> Either String ByteString
 validateHexKey hexStr =
   if length hexStr >= 64
-    then case B16.decode (C8.pack hexStr) of
-      Right decoded -> Right decoded
-      Left _ -> Left "key must be valid hexadecimal."
+    then
+      case B16.decode (C8.pack hexStr) of
+        Right decoded -> Right decoded
+        Left _ -> Left "key must be valid hexadecimal."
     else Left "key must be 64 hexadecimal characters."
 
 -- Simple encryption/decryption (XOR with fixed key for demonstration)
@@ -93,7 +97,7 @@ generateTOTP filename = do
   case result of
     Right key -> do
       code <- totp key
-      print code
+      printf "%0*d\n" (fromIntegral digit :: Int) code
     Left err -> do
       hPutStrLn stderr $ "./ft_otp: error: " ++ err
       exitFailure

@@ -17,7 +17,7 @@
       "label": "haskell build",
       "type": "shell",
       //"command": "cabal configure && cabal build"
-      "command": "stack build"
+      "command": "nix build"
     },
     {
       // F6
@@ -25,7 +25,7 @@
       "type": "shell",
       "label": "haskell clean & build",
       //"command": "cabal clean && cabal configure && cabal build"
-      "command": "stack clean && stack build"
+      "command": "nix clean && nix build"
       //"command": "stack clean ; stack build"  // for powershell
     },
     {
@@ -36,15 +36,15 @@
       },
       "type": "shell",
       "label": "haskell test",
-      //"command": "cabal test"
-      "command": "stack test"
+      "command": "nix flake check"
     },
     {
       // F6
+      // TODO: this is not working
       "isBackground": true,
       "type": "shell",
       "label": "haskell watch",
-      "command": "stack build --test --no-run-tests --file-watch"
+      "command": "nix build --watch"
     }
   ]
 }
