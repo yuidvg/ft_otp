@@ -75,7 +75,7 @@
           checks.e2e-test = mkTestScript
             "ft-otp-e2e-test"
             "test/e2e-test.sh"
-            [ self'.packages.ft-otp pkgs.oathToolkit ];
+            [ self'.packages.ft-otp pkgs.oathToolkit pkgs.openssl ];
 
           # HOTP deterministic test
           checks.hotp-deterministic-test = mkTestScript

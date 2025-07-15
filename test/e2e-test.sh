@@ -28,66 +28,119 @@ trap 'rm -rf "$TEST_DIR"' EXIT
 
 cd "$TEST_DIR"
 
-# Use provided key file or default to test/key.hex
-KEY_FILE="${1:-$PROJECT_ROOT/test/key.hex}"
+###############################################################
+# Determine key files to test
+# If the caller passed one or more arguments, use those.
+# Otherwise, default to every *.hex file in the test directory.
+###############################################################
 
-if [ ! -f "$KEY_FILE" ]; then
-    echo "Error: Key file $KEY_FILE not found"
-    exit 1
+# Build the list of key files to test.
+# 1. Any files supplied as CLI arguments
+# 2. All *.hex files found in the test directory
+# Use an associative array to de-duplicate paths.
+declare -A seen=()
+
+# Add CLI-provided files first (may be empty)
+for arg in "$@"; do
+  seen["$arg"]=1
+done
+
+# Add *.hex files from the test directory
+for f in "$PROJECT_ROOT"/test/*.hex; do
+  seen["$f"]=1
+done
+
+# Populate KEY_FILES array from the associative keys (order doesn't matter)
+KEY_FILES=("${!seen[@]}")
+
+# -------------------------------------------------------------
+# Append RANDOM_COUNT randomly generated keys (default 20)
+# to exercise property-based style testing.
+# -------------------------------------------------------------
+
+# Function to generate 64-char hex (32 random bytes)
+if command -v openssl >/dev/null 2>&1; then
+  rand_hex() { openssl rand -hex 32; }
+else
+  # POSIX fallback using /dev/urandom + hexdump (util-linux)
+  rand_hex() { hexdump -v -n32 -e '/1 "%02x"' /dev/urandom; }
 fi
 
-cp "$KEY_FILE" key.hex
+RANDOM_COUNT="${RANDOM_COUNT:-20}"
+
+for ((i=0; i<RANDOM_COUNT; i++)); do
+  hex=$(rand_hex)
+  tmp_file="$TEST_DIR/random_${i}.hex"
+  echo "$hex" > "$tmp_file"
+  KEY_FILES+=("$tmp_file")
+done
+
+# Ensure at least one key file exists
+if [ "${#KEY_FILES[@]}" -eq 0 ]; then
+  echo "Error: No .hex key files found to test"
+  exit 1
+fi
 
 echo "Test directory: $TEST_DIR"
-echo "Using key file: $KEY_FILE"
+echo "Key files to test: ${KEY_FILES[*]}"
 
-# Test key generation
-echo "Testing key generation..."
-ft_otp -g key.hex
+# Helper: Execute TOTP comparison logic up to 3 retries to avoid
+# boundary-window mismatches.
+test_single_key() {
+  local key_path="$1"
+  echo "\n=== Testing key: $key_path ==="
 
-# Function to test TOTP generation
-test_totp() {
-    local attempt=$1
-    echo "=== Test attempt $attempt ==="
+  # Copy the key into the temp dir with canonical name expected by scripts
+  cp "$key_path" key.hex
 
-    # Generate TOTP with both tools simultaneously to minimize time drift
-    local ft_otp_output
-    local oathtool_output
+  echo "Generating ft_otp.key via 'ft_otp -g key.hex'..."
+  ft_otp -g key.hex
 
+  # Inner retry loop
+  local success=0
+  for attempt in 1 2 3; do
+    echo "--- Attempt $attempt for key $(basename "$key_path") ---"
+
+    # Generate TOTP from both implementations as close in time as possible
+    local ft_otp_output oathtool_output
     ft_otp_output=$(ft_otp -k ft_otp.key)
     oathtool_output=$(oathtool --totp "$(cat key.hex)")
 
-    echo "ft_otp output: $ft_otp_output"
-    echo "oathtool output: $oathtool_output"
+    echo "ft_otp output   : $ft_otp_output"
+    echo "oathtool output : $oathtool_output"
 
     if [ "$ft_otp_output" = "$oathtool_output" ]; then
-        echo "✓ Test attempt $attempt passed: outputs match"
-        return 0
+      echo "✓ Outputs match for key $(basename "$key_path")"
+      success=1
+      break
     else
-        echo "✗ Test attempt $attempt failed: outputs do not match"
-        return 1
+      echo "✗ Outputs differ on attempt $attempt (possible time boundary)"
+      # Wait 2 seconds before retry unless last attempt
+      if [ $attempt -lt 3 ]; then
+        sleep 2
+      fi
     fi
+  done
+
+  if [ $success -ne 1 ]; then
+    echo "✗ E2E test failed for key $(basename "$key_path") after 3 attempts"
+    return 1
+  fi
 }
 
-# Try multiple times to account for time window boundaries
-SUCCESS=0
-for i in 1 2 3; do
-    if test_totp $i; then
-        SUCCESS=1
-        break
-    fi
-
-    # Wait a bit and try again (in case we hit a time boundary)
-    if [ $i -lt 3 ]; then
-        echo "Waiting 2 seconds before retry..."
-        sleep 2
-    fi
+# Iterate over all key files and run the comparison logic.
+overall_success=0
+for key_file in "${KEY_FILES[@]}"; do
+  if ! test_single_key "$key_file"; then
+    overall_success=1
+    break
+  fi
 done
 
-if [ $SUCCESS -eq 1 ]; then
-    echo "✓ E2E test passed: ft_otp and oathtool outputs match"
-    exit 0
+if [ $overall_success -eq 0 ]; then
+  echo "\n✓ All E2E tests passed: ft_otp and oathtool outputs match for all keys"
+  exit 0
 else
-    echo "✗ E2E test failed: outputs do not match after 3 attempts"
-    exit 1
+  echo "\n✗ Some E2E tests failed. See output above for details."
+  exit 1
 fi
